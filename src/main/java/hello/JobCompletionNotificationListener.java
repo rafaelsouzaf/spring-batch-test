@@ -28,6 +28,11 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
     }
 
     @Override
+    public void beforeJob(JobExecution jobExecution) {
+        log.info("================= Entrou aqui: " + jobExecution.getJobConfigurationName());
+    }
+
+    @Override
     public void afterJob(JobExecution jobExecution) {
         if(jobExecution.getStatus() == BatchStatus.COMPLETED) {
             log.info("!!! JOB FINISHED! Time to verify the results");
