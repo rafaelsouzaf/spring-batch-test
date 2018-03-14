@@ -17,12 +17,15 @@ import org.springframework.batch.item.file.mapping.JsonLineMapper;
 import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
 import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.item.file.transform.LineAggregator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+
+import java.util.Map;
 
 /**
  * Created by rsouza on 13-03-18.
@@ -70,7 +73,10 @@ public class BatchConfiguration {
     public FlatFileItemReader reader() {
         FlatFileItemReader reader = new FlatFileItemReader();
         reader.setLineMapper(new JsonLineMapper() {
-
+            @Override
+            public String toString() {
+                return "o rato roeu a roupa do rei de roma";
+            }
         });
 //        reader.setLineMapper(new DefaultLineMapper() {{
 //            setLineTokenizer(new DelimitedLineTokenizer() {{
@@ -83,15 +89,15 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public FlatFileItemWriter writer() {
-        FlatFileItemWriter writer = new FlatFileItemWriter<>();
+    public FlatFileItemWriter<Object> writer() {
+        FlatFileItemWriter<Object> writer = new FlatFileItemWriter<Object>();
         writer.setResource(new FileSystemResource("output/domain.all.csv"));
-        writer.setLineAggregator(new DelimitedLineAggregator() {{
-            setDelimiter(",");
-//            setFieldExtractor(new BeanWrapperFieldExtractor() {{
-//                setNames(new String[]{"id", "domain"});
-//            }});
-        }});
+        writer.setLineAggregator(new LineAggregator<Object>() {
+            @Override
+            public String aggregate(Object stringObjectMap) {
+                return stringObjectMap.toString();
+            }
+        });
         return writer;
     }
 
