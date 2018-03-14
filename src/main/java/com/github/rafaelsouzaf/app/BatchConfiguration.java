@@ -8,11 +8,20 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.step.tasklet.TaskletStep;
+import org.springframework.batch.item.file.FlatFileItemReader;
+import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.file.MultiResourceItemReader;
+import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.item.file.mapping.DefaultLineMapper;
+import org.springframework.batch.item.file.mapping.JsonLineMapper;
+import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor;
+import org.springframework.batch.item.file.transform.DelimitedLineAggregator;
+import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
 /**
@@ -30,7 +39,7 @@ public class BatchConfiguration {
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
 
-    @Value("csv/inputs/domain*.csv")
+    @Value("data/json/*.json")
     private Resource[] resources;
 
     @Bean
@@ -45,18 +54,45 @@ public class BatchConfiguration {
     @Bean
     public Step step01() {
 
-        MultiResourceItemReader reader = new MultiResourceItemReader();
+        MultiResourceItemReader<String> reader = new MultiResourceItemReader<String>();
         reader.setResources(resources);
+        reader.setDelegate(reader());
 
         return stepBuilderFactory.get("step-01")
                 .chunk(10)
                 .reader(reader)
-                .processor(null)
-                .writer(null)
+//                .processor(null)
+                .writer(writer())
                 .build();
     }
 
+    @Bean
+    public FlatFileItemReader reader() {
+        FlatFileItemReader reader = new FlatFileItemReader();
+        reader.setLineMapper(new JsonLineMapper() {
 
+        });
+//        reader.setLineMapper(new DefaultLineMapper() {{
+//            setLineTokenizer(new DelimitedLineTokenizer() {{
+//                setNames(new String[]{"patente", "marca", "modelo", "color", "fecha"});
+//            }});
+//            setFieldSetMapper(new BeanWrapperFieldSetMapper<String>() {{
+//            }});
+//        }});
+        return reader;
+    }
 
+    @Bean
+    public FlatFileItemWriter writer() {
+        FlatFileItemWriter writer = new FlatFileItemWriter<>();
+        writer.setResource(new FileSystemResource("output/domain.all.csv"));
+        writer.setLineAggregator(new DelimitedLineAggregator() {{
+            setDelimiter(",");
+//            setFieldExtractor(new BeanWrapperFieldExtractor() {{
+//                setNames(new String[]{"id", "domain"});
+//            }});
+        }});
+        return writer;
+    }
 
 }
